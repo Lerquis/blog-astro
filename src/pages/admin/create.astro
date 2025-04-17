@@ -1,0 +1,79 @@
+---
+export const prerender = false;
+import Layout from "../../layouts/MainLayout.astro";
+---
+
+<Layout>
+  <div class="max-w-2xl mx-auto mt-10">
+    <h1 class="text-3xl font-bold mb-6">Nuevo Post</h1>
+
+    <form id="createForm" class="flex flex-col gap-4" method="post">
+      <input
+        type="text"
+        name="title"
+        placeholder="Título del post"
+        class="border p-2 rounded"
+        required
+      />
+
+      <input
+        type="text"
+        name="slug"
+        placeholder="Enlace"
+        class="border p-2 rounded"
+        required
+      />
+
+      <textarea
+        name="content"
+        placeholder="Contenido del post"
+        class="border p-2 rounded h-40"
+        required></textarea>
+
+      <div class="flex gap-4">
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded"
+          >Crear</button
+        >
+
+        <a href="/admin" class="text-gray-500 hover:underline self-center"
+          >Cancelar</a
+        >
+      </div>
+    </form>
+  </div>
+</Layout>
+
+<script>
+  const form = document.getElementById("createForm");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form as HTMLFormElement);
+      const data = {
+        title: formData.get("title"),
+        content: formData.get("content"),
+        slug: formData.get("slug"),
+      };
+
+      const cookie = document.cookie.match(/token=([^;]+)/);
+
+      if (!cookie) return alert("There is no token");
+
+      const res = await fetch(`${import.meta.env.PUBLIC_DATABASE_URL}posts/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: cookie[1],
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        window.location.href = "/admin";
+      } else {
+        alert("Error al crear el post.");
+      }
+    });
+  }
+</script>

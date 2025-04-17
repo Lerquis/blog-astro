@@ -1,0 +1,74 @@
+---
+export const prerender = false;
+import Layout from "../../layouts/MainLayout.astro";
+
+const response = await fetch(`${import.meta.env.PUBLIC_DATABASE_URL}posts/`);
+const data = await response.json();
+const posts = data.data;
+---
+
+<Layout>
+  <div class="max-w-4xl mx-auto mt-10">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Panel de Administración</h1>
+      <a href="/admin/create" class="bg-blue-600 text-white px-4 py-2 rounded"
+        >Nuevo Post</a
+      >
+    </div>
+
+    <table class="w-full border">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="text-left p-2">Título</th>
+          <th class="text-left p-2">Fecha</th>
+          <th class="text-left p-2">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          posts.map(
+            (post: {
+              title: string;
+              content: string;
+              created_at: string;
+              id: number;
+            }) => (
+              <tr class="border-t">
+                <td class="p-2">{post.title}</td>
+                <td class="p-2">
+                  {new Date(post.created_at).toLocaleDateString()}
+                </td>
+                <td class="p-2">
+                  <a href={`/admin/edit/${post.id}`} class="text-blue-500 mr-2">
+                    Editar
+                  </a>
+                  <button
+                    onclick={`window.deletePost(${post.id})`}
+                    class="text-red-500 hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            )
+          )
+        }
+      </tbody>
+    </table>
+  </div>
+</Layout>
+<script>
+  (window as any).deletePost = async (id: string) => {
+    const cookie = document.cookie.match(/token=([^;]+)/);
+    if (!cookie) return alert("There is no token");
+
+    // if (!confirm("¿Eliminar este post?")) return;
+    await fetch(`${import.meta.env.PUBLIC_DATABASE_URL}posts/${id}`, {
+      method: "DELETE",
+      headers: {
+        authorization: cookie[1],
+      },
+    });
+    window.location.reload();
+  };
+</script>

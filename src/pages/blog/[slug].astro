@@ -1,0 +1,30 @@
+---
+export const prerender = false;
+import Layout from "../../layouts/MainLayout.astro";
+
+const { slug } = Astro.params;
+const response = await fetch(`${import.meta.env.PUBLIC_DATABASE_URL}posts/`);
+const data = await response.json();
+const posts = data.data;
+if (posts.length === 0) return Astro.redirect("/");
+const post = posts.find((postItem: { slug: string }) => postItem.slug === slug);
+if (!post) return Astro.redirect("/");
+---
+
+<Layout>
+  <article class="prose lg:prose-xl mx-auto p-4">
+    {
+      post ? (
+        <div>
+          <h1>{post.title}</h1>
+          <p class="text-sm text-gray-500">{post.date}</p>
+          <div>{post.content}</div>
+        </div>
+      ) : (
+        <div>
+          <p>Post not found</p>
+        </div>
+      )
+    }
+  </article>
+</Layout>

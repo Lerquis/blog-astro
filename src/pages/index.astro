@@ -1,11 +1,27 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+// src/pages/index.astro
+import MainLayout from "../layouts/MainLayout.astro";
+import PostCard from "../components/PostCard.astro";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const response = await fetch(`${import.meta.env.PUBLIC_DATABASE_URL}posts/`);
+const data = await response.json();
+const posts = data.data;
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<MainLayout>
+  <h1 class="text-3xl font-bold mb-6">Últimos Posts</h1>
+
+  <div class="space-y-4">
+    {
+      posts.map(
+        (post: {
+          title: string;
+          id: number;
+          slug: string;
+          content: string;
+          created_at: string;
+        }) => <PostCard {...post} />
+      )
+    }
+  </div>
+</MainLayout>

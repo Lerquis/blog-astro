@@ -1,0 +1,67 @@
+---
+import Layout from "../../layouts/MainLayout.astro";
+---
+
+<Layout>
+  <form id="registerForm" method="POST" class="max-w-sm mx-auto mt-10">
+    <h1 class="text-2xl mb-4">Registrar Cuenta</h1>
+    <input
+      type="text"
+      name="email"
+      placeholder="Correo"
+      class="block w-full mb-2 p-2 border"
+    />
+    <input
+      type="password"
+      name="password"
+      placeholder="Contraseña"
+      class="block w-full mb-2 p-2 border"
+    />
+    <div class="flex justify-between">
+      <button
+        type="submit"
+        class="bg-blue-500 text-white px-4 py-2 rounded-sm cursor-pointer"
+        >Registrarse</button
+      >
+      <a
+        href="/admin/login"
+        class="border-[1px] border-blue-500 text-blue-500 px-4 py-2 rounded-sm cursor-pointer"
+      >
+        Iniciar Sesion
+      </a>
+    </div>
+  </form>
+</Layout>
+
+<script>
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const email = form.email.value;
+    const password = form.password.value;
+
+    const response = await fetch("http://localhost:3900/api/user/register/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      if (data.status === 200) window.location.href = "/admin/login";
+      else {
+        alert("Error al crear cuenta. Verifica tus credenciales.");
+        form.email.value = "";
+        form.password.value = "";
+      }
+    } else {
+      alert("Error al crear cuenta. Verifica tus credenciales.");
+      form.email.value = "";
+      form.password.value = "";
+    }
+  };
+
+  const loginButton = document.getElementById("registerForm");
+  if (loginButton) loginButton.addEventListener("submit", handleSubmit);
+</script>

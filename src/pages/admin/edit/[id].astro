@@ -1,0 +1,119 @@
+---
+export const prerender = false;
+import Layout from "../../../layouts/MainLayout.astro";
+
+type PostType = {
+  title: string;
+  id: number;
+  slug: string;
+  content: string;
+  created_at: string;
+};
+
+let cachedPosts: any = null;
+
+const fetchPosts = async () => {
+  if (cachedPosts) return cachedPosts;
+
+  const response = await fetch(`${import.meta.env.PUBLIC_DATABASE_URL}posts/`);
+  const data = await response.json();
+  cachedPosts = data.data;
+  return cachedPosts;
+};
+
+export async function getStaticPaths() {
+  const posts = await fetchPosts();
+  if (!posts) return [];
+  return posts.map((post: PostType) => ({
+    params: { id: post.id.toString() },
+  }));
+}
+
+// if (!cachedPosts) return;
+
+const { params }: { params: { id: string } } = Astro;
+const response = await fetch(
+  `${import.meta.env.PUBLIC_DATABASE_URL}posts/${params.id}`
+);
+const data = await response.json();
+const post = data.data;
+---
+
+<Layout>
+  <div class="max-w-2xl mx-auto mt-10">
+    <h1 class="text-3xl font-bold mb-6">Editar Post</h1>
+
+    <form id="editForm" class="flex flex-col gap-4">
+      <input
+        type="text"
+        name="title"
+        placeholder="Título del post"
+        class="border p-2 rounded"
+        value={post.title}
+        required
+      />
+      <input
+        type="text"
+        name="slug"
+        placeholder="Enlace"
+        class="border p-2 rounded"
+        value={post.slug}
+        required
+      />
+
+      <textarea
+        name="content"
+        placeholder="Contenido del post"
+        class="border p-2 rounded h-40"
+        required>{post.content}</textarea
+      >
+
+      <div class="flex gap-4">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded"
+          >Actualizar</button
+        >
+
+        <a href="/admin" class="text-gray-500 hover:underline self-center"
+          >Cancelar</a
+        >
+      </div>
+    </form>
+  </div>
+  <script>
+    const form: any = document.getElementById("editForm");
+    const id = window.location.pathname.split("/")[3];
+    if (form) {
+      form.addEventListener("submit", async (e: any) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = {
+          title: formData.get("title"),
+          content: formData.get("content"),
+          slug: formData.get("slug"),
+        };
+
+        const cookie = document.cookie.match(/token=([^;]+)/);
+        if (!cookie) return alert("There is no token");
+
+        const res = await fetch(
+          `${import.meta.env.PUBLIC_DATABASE_URL}posts/${id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: cookie[1],
+            },
+            body: JSON.stringify(data),
+          }
+        );
+
+        if (res.ok) {
+          window.location.href = "/admin";
+        } else {
+          alert("Error al actualizar el post.");
+        }
+      });
+    }
+  </script>
+</Layout>
